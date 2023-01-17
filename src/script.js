@@ -5,47 +5,41 @@ import gsap from 'gsap';
 import * as dat from 'lil-gui';
 
 /**
+ * Base
+ */
+// Canvas
+const canvas = document.querySelector('canvas.webgl');
+
+// Scene
+const scene = new THREE.Scene();
+
+/**
  * Textures
  */
-// const image = new Image();
-// const texture = new THREE.Texture(image);
-// image.addEventListener('load', () => {
-//   texture.needsUpdate = true;
-// });
-// image.src = '/textures/door/color.jpg';
+const textureLoader = new THREE.TextureLoader();
 
-const loadingManager = new THREE.LoadingManager();
-loadingManager.onStart = () => {
-  console.log('loading started');
-};
-loadingManager.onLoad = () => {
-  console.log('loading finished');
-};
-loadingManager.onProgress = () => {
-  console.log('loading progressing');
-};
-loadingManager.onError = () => {
-  console.log('loading error');
-};
-
-const textureLoader = new THREE.TextureLoader(loadingManager);
-const colorTexture = textureLoader.load('/textures/door/color.jpg');
-colorTexture.generateMipmaps = false;
-colorTexture.minFilter = THREE.NearestFilter;
-// colorTexture.offset.x = 0.5;
-// colorTexture.offset.y = 0.5;
-// colorTexture.repeat.x = 2;
-// colorTexture.repeat.y = 3;
-// colorTexture.wrapS = THREE.MirroredRepeatWrapping;
-// colorTexture.wrapT = THREE.MirroredRepeatWrapping;
-const alphaTexture = textureLoader.load('/textures/door/alpha.jpg');
-const heightTexture = textureLoader.load('/textures/door/height.jpg');
-const normalTexture = textureLoader.load('/textures/door/normal.jpg');
-const ambientOcclusionTexture = textureLoader.load(
+const doorColorTexture = textureLoader.load('/textures/door/color.jpg');
+const doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg');
+const doorAmbientOcclusionTexture = textureLoader.load(
   '/textures/door/ambientOcclusion.jpg'
 );
-const metalnessTexture = textureLoader.load('/textures/door/metalness.jpg');
-const roughnessTexture = textureLoader.load('/textures/door/roughness.jpg');
+const doorHeightTexture = textureLoader.load('/textures/door/height.jpg');
+const doorNormalTexture = textureLoader.load('/textures/door/normal.jpg');
+const doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg');
+const doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg');
+const matcapTexture = textureLoader.load('/textures/matcaps/3.png');
+const gradientTexture = textureLoader.load('/textures/gradients/3.jpg');
+
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+const environmentMapTexture = cubeTextureLoader.load([
+  '/textures/environmentMaps/3/px.jpg',
+  '/textures/environmentMaps/3/nx.jpg',
+  '/textures/environmentMaps/3/py.jpg',
+  '/textures/environmentMaps/3/ny.jpg',
+  '/textures/environmentMaps/3/pz.jpg',
+  '/textures/environmentMaps/3/nz.jpg',
+]);
 
 const parameters = {
   color: 0xff0000,
@@ -59,6 +53,89 @@ const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
+
+/**
+ * Objects
+ */
+const material = new THREE.MeshStandardMaterial();
+material.metalness = 0.7;
+material.roughness = 0.2;
+material.envMap = environmentMapTexture;
+// gradientTexture.minFilter = THREE.NearestFilter;
+// gradientTexture.magFilter = THREE.NearestFilter;
+// gradientTexture.generateMipmaps = false;
+// material.gradientMap = gradientTexture;
+// material.shininess = 100;
+// material.specular = new THREE.Color(0x1188ff);
+// material.matcap = matcapTexture;
+// material.map = doorColorTexture;
+// material.aoMap = doorAmbientOcclusionTexture;
+// material.aoMapIntensity = 1;
+// material.displacementMap = doorHeightTexture;
+// material.displacementScale = 0.05;
+// material.metalnessMap = doorMetalnessTexture;
+// material.roughnessMap = doorRoughnessTexture;
+// material.normalMap = doorNormalTexture;
+// material.normalScale.set(0.5, 0.5);
+// material.color = new THREE.Color('#ff0000');
+// material.wireframe = true;
+// material.transparent = true;
+// material.alphaMap = doorAlphaTexture
+// material.opacity = 0.5;
+// material.alphaMap = doorAlphaTexture;
+// material.side = THREE.DoubleSide;
+// material.flatShading = true;
+
+const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 64, 64), material);
+sphere.position.x = -1.5;
+
+const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 100, 100), material);
+
+const torus = new THREE.Mesh(
+  new THREE.TorusGeometry(0.3, 0.2, 64, 128),
+  material
+);
+torus.position.x = 1.5;
+
+scene.add(sphere, plane, torus);
+
+sphere.geometry.setAttribute(
+  'uv2',
+  new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2)
+);
+plane.geometry.setAttribute(
+  'uv2',
+  new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2)
+);
+torus.geometry.setAttribute(
+  'uv2',
+  new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2)
+);
+
+/**
+ * Lights
+ */
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xffffff, 0.5);
+pointLight.position.x = 2;
+pointLight.position.y = 3;
+pointLight.position.z = 4;
+scene.add(pointLight);
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+  75,
+  sizes.width / sizes.height,
+  1,
+  100
+);
+// camera.position.x = 2;
+// camera.position.y = 2;
+camera.position.z = 3;
+camera.lookAt(plane.position);
+scene.add(camera);
 
 window.addEventListener('resize', () => {
   // Update sizes
@@ -105,51 +182,17 @@ window.addEventListener('mousemove', (event) => {
 });
 
 /**
- * Base
- */
-// Canvas
-const canvas = document.querySelector('canvas.webgl');
-
-// Scene
-const scene = new THREE.Scene();
-
-// Object
-// const geometry = new THREE.TorusGeometry(1, 0.35, 32, 100);
-const geometry = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
-
-// Create an empty BufferGeometry
-// const geometry = new THREE.BufferGeometry();
-
-// Create 50 triangles (450 values)
-// const count = 50;
-// const positionsArray = new Float32Array(count * 3 * 3);
-// for (let i = 0; i < count * 3 * 3; i++) {
-//   positionsArray[i] = (Math.random() - 0.5) * 4;
-// }
-
-// Create the attribute and name it 'position'
-// const positionsAttribute = new THREE.BufferAttribute(positionsArray, 3);
-// geometry.setAttribute('position', positionsAttribute);
-
-const material = new THREE.MeshBasicMaterial({
-  map: colorTexture,
-});
-
-// const material = new THREE.MeshNormalMaterial();
-const mesh = new THREE.Mesh(geometry, material);
-scene.add(mesh);
-
-/**
  * Debug
  */
 const gui = new dat.GUI();
-gui.add(mesh.position, 'y').min(-3).max(3).step(0.01).name('elevation');
-gui.add(mesh, 'visible');
-gui.add(material, 'wireframe');
-gui.addColor(parameters, 'color').onChange(() => {
-  material.color.set(parameters.color);
-});
-gui.add(parameters, 'spin');
+gui.add(material, 'metalness').min(0).max(1).step(0.0001);
+gui.add(material, 'roughness').min(0).max(1).step(0.0001);
+// gui.add(plane.position, 'y').min(-3).max(3).step(0.01).name('elevation');
+// gui.add(plane, 'visible');
+// gui.addColor(parameters, 'color').onChange(() => {
+//   material.color.set(parameters.color);
+// });
+// gui.add(parameters, 'spin');
 
 // Position
 // mesh.position.x = 0.7;
@@ -196,19 +239,6 @@ gui.add(parameters, 'spin');
 const axesHelper = new THREE.AxesHelper(2);
 scene.add(axesHelper);
 
-// Camera
-const camera = new THREE.PerspectiveCamera(
-  75,
-  sizes.width / sizes.height,
-  1,
-  100
-);
-// camera.position.x = 2;
-// camera.position.y = 2;
-camera.position.z = 3;
-camera.lookAt(mesh.position);
-scene.add(camera);
-
 // Controles
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -224,14 +254,19 @@ renderer.render(scene, camera);
 
 // Animate
 const clock = new THREE.Clock();
-// gsap.to(mesh.position, { duration: 1, delay: 1, x: 2 });
 
 const tick = () => {
   // Time
   const elapsedTime = clock.getElapsedTime();
 
   // Update objects
-  // mesh.rotation.y = elapsedTime;
+  sphere.rotation.y = 0.1 * elapsedTime;
+  plane.rotation.y = 0.1 * elapsedTime;
+  torus.rotation.y = 0.1 * elapsedTime;
+
+  sphere.rotation.x = 0.15 * elapsedTime;
+  plane.rotation.x = 0.15 * elapsedTime;
+  torus.rotation.x = 0.15 * elapsedTime;
 
   // Update camera
   // camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 2;
