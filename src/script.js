@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from 'gsap';
 import * as dat from 'lil-gui';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
 /**
  * Base
@@ -13,104 +15,65 @@ const canvas = document.querySelector('canvas.webgl');
 // Scene
 const scene = new THREE.Scene();
 
-/**
- * Textures
- */
+// Texture
 const textureLoader = new THREE.TextureLoader();
+const matcapTexture = textureLoader.load('/textures/matcaps/8.png');
 
-const doorColorTexture = textureLoader.load('/textures/door/color.jpg');
-const doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg');
-const doorAmbientOcclusionTexture = textureLoader.load(
-  '/textures/door/ambientOcclusion.jpg'
-);
-const doorHeightTexture = textureLoader.load('/textures/door/height.jpg');
-const doorNormalTexture = textureLoader.load('/textures/door/normal.jpg');
-const doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg');
-const doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg');
-const matcapTexture = textureLoader.load('/textures/matcaps/3.png');
-const gradientTexture = textureLoader.load('/textures/gradients/3.jpg');
+/**
+ * Fonts
+ */
+const fontLoader = new FontLoader();
 
-const cubeTextureLoader = new THREE.CubeTextureLoader();
+fontLoader.load('/fonts/helvetiker_regular.typeface.json', (font) => {
+  const textGeometry = new TextGeometry('Hello Three.js', {
+    font: font,
+    size: 0.5,
+    height: 0.2,
+    curveSegments: 12,
+    bevelEnabled: true,
+    bevelThickness: 0.03,
+    bevelSize: 0.02,
+    bevelOffset: 0,
+    bevelSegments: 5,
+  });
+  // textGeometry.computeBoundingBox();
+  // console.log(textGeometry.boundingBox);
 
-const environmentMapTexture = cubeTextureLoader.load([
-  '/textures/environmentMaps/3/px.jpg',
-  '/textures/environmentMaps/3/nx.jpg',
-  '/textures/environmentMaps/3/py.jpg',
-  '/textures/environmentMaps/3/ny.jpg',
-  '/textures/environmentMaps/3/pz.jpg',
-  '/textures/environmentMaps/3/nz.jpg',
-]);
+  // textGeometry.translate(
+  //   -(textGeometry.boundingBox.max.x - 0.02) * 0.5, // Subtract bevel size
+  //   -(textGeometry.boundingBox.max.y - 0.02) * 0.5, // Subtract bevel size
+  //   -(textGeometry.boundingBox.max.z - 0.03) * 0.5 // Subtract bevel thickness
+  // );
+  textGeometry.center();
 
-const parameters = {
-  color: 0xff0000,
-  spin: () => {
-    gsap.to(mesh.rotation, { duration: 1, y: mesh.rotation.y + Math.PI * 2 });
-  },
-};
+  const material = new THREE.MeshMatcapMaterial({ matcap: matcapTexture });
+  const text = new THREE.Mesh(textGeometry, material);
+  scene.add(text);
+
+  const donutGeometry = new THREE.TorusGeometry(0.3, 0.2, 20, 45);
+
+  for (let i = 0; i < 100; i++) {
+    const donut = new THREE.Mesh(donutGeometry, material);
+
+    donut.position.x = (Math.random() - 0.5) * 10;
+    donut.position.y = (Math.random() - 0.5) * 10;
+    donut.position.z = (Math.random() - 0.5) * 10;
+
+    donut.rotation.x = Math.random() * Math.PI;
+    donut.rotation.y = Math.random() * Math.PI;
+
+    const scale = Math.random();
+    donut.scale.set(scale, scale, scale);
+
+    scene.add(donut);
+  }
+});
 
 // Sizes
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
 };
-
-/**
- * Objects
- */
-const material = new THREE.MeshStandardMaterial();
-material.metalness = 0.7;
-material.roughness = 0.2;
-material.envMap = environmentMapTexture;
-// gradientTexture.minFilter = THREE.NearestFilter;
-// gradientTexture.magFilter = THREE.NearestFilter;
-// gradientTexture.generateMipmaps = false;
-// material.gradientMap = gradientTexture;
-// material.shininess = 100;
-// material.specular = new THREE.Color(0x1188ff);
-// material.matcap = matcapTexture;
-// material.map = doorColorTexture;
-// material.aoMap = doorAmbientOcclusionTexture;
-// material.aoMapIntensity = 1;
-// material.displacementMap = doorHeightTexture;
-// material.displacementScale = 0.05;
-// material.metalnessMap = doorMetalnessTexture;
-// material.roughnessMap = doorRoughnessTexture;
-// material.normalMap = doorNormalTexture;
-// material.normalScale.set(0.5, 0.5);
-// material.color = new THREE.Color('#ff0000');
-// material.wireframe = true;
-// material.transparent = true;
-// material.alphaMap = doorAlphaTexture
-// material.opacity = 0.5;
-// material.alphaMap = doorAlphaTexture;
-// material.side = THREE.DoubleSide;
-// material.flatShading = true;
-
-const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 64, 64), material);
-sphere.position.x = -1.5;
-
-const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 100, 100), material);
-
-const torus = new THREE.Mesh(
-  new THREE.TorusGeometry(0.3, 0.2, 64, 128),
-  material
-);
-torus.position.x = 1.5;
-
-scene.add(sphere, plane, torus);
-
-sphere.geometry.setAttribute(
-  'uv2',
-  new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2)
-);
-plane.geometry.setAttribute(
-  'uv2',
-  new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2)
-);
-torus.geometry.setAttribute(
-  'uv2',
-  new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2)
-);
 
 /**
  * Lights
@@ -134,7 +97,7 @@ const camera = new THREE.PerspectiveCamera(
 // camera.position.x = 2;
 // camera.position.y = 2;
 camera.position.z = 3;
-camera.lookAt(plane.position);
+camera.lookAt(0, 0, 0);
 scene.add(camera);
 
 window.addEventListener('resize', () => {
@@ -184,56 +147,15 @@ window.addEventListener('mousemove', (event) => {
 /**
  * Debug
  */
-const gui = new dat.GUI();
-gui.add(material, 'metalness').min(0).max(1).step(0.0001);
-gui.add(material, 'roughness').min(0).max(1).step(0.0001);
+// const gui = new dat.GUI();
+// gui.add(material, 'metalness').min(0).max(1).step(0.0001);
+// gui.add(material, 'roughness').min(0).max(1).step(0.0001);
 // gui.add(plane.position, 'y').min(-3).max(3).step(0.01).name('elevation');
 // gui.add(plane, 'visible');
 // gui.addColor(parameters, 'color').onChange(() => {
 //   material.color.set(parameters.color);
 // });
 // gui.add(parameters, 'spin');
-
-// Position
-// mesh.position.x = 0.7;
-// mesh.position.y = -0.6;
-// mesh.position.z = 1;
-
-// mesh.position.set(0.7, -0.6, 1);
-
-// Scale
-// mesh.scale.set(2, 0.25, 0.5);
-
-// Rotation
-// mesh.rotation.x = Math.PI * 0.25;
-// mesh.rotation.y = Math.PI * 0.25;
-
-// Group
-// const group = new THREE.Group();
-// group.scale.y = 2;
-// group.rotation.y = 0.2;
-// scene.add(group);
-
-// const cube1 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 1),
-//   new THREE.MeshNormalMaterial()
-// );
-// cube1.position.x = -1.5;
-// group.add(cube1);
-
-// const cube2 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 1),
-//   new THREE.MeshNormalMaterial()
-// );
-// cube2.position.x = 0;
-// group.add(cube2);
-
-// const cube3 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 1),
-//   new THREE.MeshNormalMaterial()
-// );
-// cube3.position.x = 1.5;
-// group.add(cube3);
 
 // Axes Helper
 const axesHelper = new THREE.AxesHelper(2);
@@ -258,15 +180,6 @@ const clock = new THREE.Clock();
 const tick = () => {
   // Time
   const elapsedTime = clock.getElapsedTime();
-
-  // Update objects
-  sphere.rotation.y = 0.1 * elapsedTime;
-  plane.rotation.y = 0.1 * elapsedTime;
-  torus.rotation.y = 0.1 * elapsedTime;
-
-  sphere.rotation.x = 0.15 * elapsedTime;
-  plane.rotation.x = 0.15 * elapsedTime;
-  torus.rotation.x = 0.15 * elapsedTime;
 
   // Update camera
   // camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 2;
