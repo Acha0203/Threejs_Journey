@@ -1,8 +1,8 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import gsap from 'gsap';
-import * as dat from 'lil-gui';
+// import gsap from 'gsap';
+// import * as dat from 'lil-gui';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
@@ -36,14 +36,7 @@ fontLoader.load('/fonts/helvetiker_regular.typeface.json', (font) => {
     bevelOffset: 0,
     bevelSegments: 5,
   });
-  // textGeometry.computeBoundingBox();
-  // console.log(textGeometry.boundingBox);
 
-  // textGeometry.translate(
-  //   -(textGeometry.boundingBox.max.x - 0.02) * 0.5, // Subtract bevel size
-  //   -(textGeometry.boundingBox.max.y - 0.02) * 0.5, // Subtract bevel size
-  //   -(textGeometry.boundingBox.max.z - 0.03) * 0.5 // Subtract bevel thickness
-  // );
   textGeometry.center();
 
   const material = new THREE.MeshMatcapMaterial({ matcap: matcapTexture });
@@ -94,8 +87,6 @@ const camera = new THREE.PerspectiveCamera(
   1,
   100
 );
-// camera.position.x = 2;
-// camera.position.y = 2;
 camera.position.z = 3;
 camera.lookAt(0, 0, 0);
 scene.add(camera);
@@ -158,14 +149,12 @@ window.addEventListener('mousemove', (event) => {
 // gui.add(parameters, 'spin');
 
 // Axes Helper
-const axesHelper = new THREE.AxesHelper(2);
-scene.add(axesHelper);
+// const axesHelper = new THREE.AxesHelper(2);
+// scene.add(axesHelper);
 
 // Controles
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
-// controls.target.y = 2;
-// controls.update();
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
